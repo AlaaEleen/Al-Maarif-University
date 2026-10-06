@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الكليات والأقسام | جامعة المعارف</title>
+    <meta name="description" content="تعرف على كليات وأقسام جامعة المعارف الأهلية في الرمادي.">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #langToggleBtn { background:transparent; border:1.5px solid var(--glass-border); color:var(--text-light); padding:6px 14px; border-radius:50px; cursor:pointer; font-family:inherit; font-size:0.9rem; font-weight:700; transition:var(--transition); letter-spacing:1px; }
+        #langToggleBtn:hover { background:var(--secondary-color); border-color:var(--secondary-color); color:#fff; }
+        
+        .page-header {
+            padding: 150px 0 80px;
+            background: linear-gradient(to right, var(--dark-bg), rgba(11,12,16,0.8)), url('assets/images/hero.webp') center/cover;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .page-header h1 { color: var(--accent-color); }
+
+        .filter-container {
+            display: flex; justify-content: center;
+            gap: 15px; margin: 40px 0; flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            padding: 8px 24px; border-radius: 50px;
+            cursor: pointer; transition: var(--transition);
+            font-family: inherit; font-size: 1rem;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .college-detail {
+            display: flex; background: var(--dark-surface);
+            border-radius: 16px; overflow: hidden;
+            margin-bottom: 40px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+        .college-detail:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border-color: rgba(252,163,17,0.3);
+        }
+        .col-image { flex: 0 0 35%; min-height: 250px; position: relative; }
+        .col-image img { width:100%; height:100%; object-fit:cover; position:absolute; }
+        .col-content { flex: 1; padding: 30px; }
+        .col-content h3 {
+            font-size: 1.6rem; color: var(--accent-color);
+            margin-bottom: 15px; display: flex; align-items: center; gap: 10px;
+        }
+        .dept-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .dept-tag {
+            background: rgba(255,255,255,0.05); padding: 6px 15px;
+            border-radius: 8px; font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+        }
+        .dept-tag i { color: var(--success); margin-left: 6px; }
+        .grade-highlight { color: var(--accent-color); font-weight: bold; }
+        
+        @media (max-width: 900px) {
+            .college-detail { flex-direction: column; }
+            .col-image { min-height: 200px; position: relative; }
+            .col-image img { position: relative; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="scrolled">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-university"></i>
+                <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span>
+            </a>
+            <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
+            <ul class="nav-links">
+                <li><a href="index.html" data-i18n="nav-home">الرئيسية</a></li>
+                <li><a href="index.html#about" data-i18n="nav-about">عن الجامعة</a></li>
+                <li><a href="colleges.html" class="active" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                <li><a href="tuition.html" data-i18n="nav-tuition">أقساط الدراسة</a></li>
+                <li><a href="admin.html" class="btn btn-outline" style="padding:6px 14px; margin-left:5px;" target="_blank"><i class="fas fa-user-shield"></i> لوحة التحكم</a></li>
+                <li><a href="admission.html" class="btn btn-primary" style="padding:8px 20px;box-shadow:none;" data-i18n="nav-register">سجل الآن</a></li>
+                <li><button id="langToggleBtn" onclick="toggleLang()">EN</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container animate-on-scroll">
+            <h1 data-i18n="page-colleges-h1">الكليات والأقسام العلمية</h1>
+            <p data-i18n="page-colleges-p">تعرف على كليات وأقسام جامعة المعارف الأهلية، واختر التخصص الذي يناسب مسارك وطموحك.</p>
+        </div>
+    </div>
+
+    <section class="section container">
+
+        <div class="filter-container animate-on-scroll">
+            <button class="filter-btn active" onclick="filterColleges('all',this)" data-i18n="filter-all">الكل</button>
+            <button class="filter-btn" onclick="filterColleges('medical',this)" data-i18n="filter-medical">الطبية والصحية</button>
+            <button class="filter-btn" onclick="filterColleges('engineering',this)" data-i18n="filter-eng">الهندسة والعلوم</button>
+            <button class="filter-btn" onclick="filterColleges('humanities',this)" data-i18n="filter-hum">العلوم الإنسانية</button>
+        </div>
+
+        <div class="colleges-list" id="collegesList">
+            <!-- Dynamic departments loaded from database -->
+            <div style="text-align: center; color: var(--text-muted); padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 10px;">جاري تحميل الكليات ومعدلات القبول من قاعدة البيانات...</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-about">
+                <a href="#" class="logo"><i class="fas fa-university"></i> <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span></a>
+                <p data-i18n="footer-about">صرح تعليمي يهدف للارتقاء بالمستوى الأكاديمي والبحثي لتخريج كفاءات تساهم في بناء المجتمع وفقا لمعايير الجودة الشاملة.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer-links-h">روابط سريعة</h4>
+                <ul>
+                    <li><a href="index.html" data-i18n="nav-home">الرئيسية</a></li>
+                    <li><a href="colleges.html" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                    <li><a href="tuition.html" data-i18n="nav-tuition">أقساط الدراسة</a></li>
+                    <li><a href="admission.html" data-i18n="nav-register">استمارة التقديم</a></li>
+                    <li><a href="admin.html" target="_blank"><i class="fas fa-lock"></i> إدارة النظام</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer-contact">تواصل معنا</h4>
+                <ul style="color: var(--text-muted)">
+                    <li style="margin-bottom:15px;"><i class="fas fa-map-marker-alt" style="margin-left:10px;color:var(--secondary-color)"></i> <span data-i18n="footer-addr">العراق، الأنبار، الرمادي</span></li>
+                    <li style="margin-bottom:15px;"><i class="fas fa-phone-alt" style="margin-left:10px;color:var(--secondary-color)"></i> 7393</li>
+                    <li><i class="fas fa-globe" style="margin-left:10px;color:var(--secondary-color)"></i> WWW.UOA.EDU.IQ</li>
+                </ul>
+            </div>
+        </div>
+        <div class="container">
+            <div class="copyright" data-i18n="footer-copy">&copy; 2026 جميع الحقوق محفوظة لجامعة المعارف الأهلية</div>
+        </div>
+    </footer>
+
+    <script defer src="js/main.js"></script>
+    <script defer src="js/lang.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadDepartmentsFromDB);
+
+        function loadDepartmentsFromDB() {
+            fetch('/api/departments')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderCollegesList(data.data);
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching database departments:', err);
+            });
+        }
+
+        function renderCollegesList(depts) {
+            const list = document.getElementById('collegesList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            const lang = localStorage.getItem('lang') || 'ar';
+            const isAr = lang === 'ar';
+
+            depts.forEach(d => {
+                const title = isAr ? `${d.college_name_ar} – ${d.dept_name_ar}` : `${d.college_name_en} – ${d.dept_name_en}`;
+                const desc = isAr ? (d.description_ar || '') : (d.description_en || '');
+
+                const div = document.createElement('div');
+                div.className = 'college-detail';
+                div.dataset.cat = d.category;
+
+                let avgText = '';
+                if (d.morning_avg === d.evening_avg || d.evening_avg <= 50) {
+                    avgText = `معدل القبول: <span class="grade-highlight">${d.morning_avg}%</span>`;
+                } else {
+                    avgText = `صباحي: <span class="grade-highlight">${d.morning_avg}%</span> | مسائي: <span class="grade-highlight">${d.evening_avg}%</span>`;
+                }
+
+                div.innerHTML = `
+                    <div class="col-image"><img loading="lazy" decoding="async" src="${d.image_url}" alt="${title}"></div>
+                    <div class="col-content">
+                        <h3><i class="fas ${d.icon_class || 'fa-graduation-cap'}"></i> <span>${title}</span></h3>
+                        <p>${desc}</p>
+                        <div class="dept-tags">
+                            <span class="dept-tag"><i class="fas fa-check"></i> <span>دراسة صباحية ومسائية</span></span>
+                            <span class="dept-tag"><i class="fas fa-certificate"></i> <span>${avgText}</span></span>
+                            <span class="dept-tag"><i class="fas fa-coins"></i> <span>القسط: ${d.tuition_fee.toLocaleString()} دينار</span></span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function filterColleges(cat, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.college-detail').forEach(card => {
+                if (cat === 'all' || card.dataset.cat === cat) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

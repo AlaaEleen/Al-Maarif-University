@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أقساط الدراسة | جامعة المعارف</title>
+    <meta name="description" content="جدول أقساط الدراسة ومعدلات القبول لكليات وأقسام جامعة المعارف الأهلية">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #langToggleBtn { background:transparent; border:1.5px solid var(--glass-border); color:var(--text-light); padding:6px 14px; border-radius:50px; cursor:pointer; font-family:inherit; font-size:0.9rem; font-weight:700; transition:var(--transition); letter-spacing:1px; }
+        #langToggleBtn:hover { background:var(--secondary-color); border-color:var(--secondary-color); color:#fff; }
+        .page-header {
+            padding: 150px 0 80px;
+            background: linear-gradient(to right, var(--dark-bg), rgba(11,12,16,0.8)), url('assets/images/hero.webp') center/cover;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .page-header h1 { color: var(--accent-color); }
+        .tuition-table-wrapper {
+            margin: 40px 0;
+            overflow-x: auto;
+        }
+        .tuition-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--dark-surface);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+        .tuition-table th {
+            background: rgba(255,255,255,0.06);
+            padding: 18px 20px;
+            text-align: right;
+            font-size: 1rem;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        .tuition-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+        .tuition-table tr:hover { background: rgba(255,255,255,0.02); }
+        .fee-badge {
+            background: rgba(252,163,17,0.15);
+            color: var(--accent-color);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="scrolled">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-university"></i>
+                <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span>
+            </a>
+            <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
+            <ul class="nav-links">
+                <li><a href="index.html" data-i18n="nav-home">الرئيسية</a></li>
+                <li><a href="index.html#about" data-i18n="nav-about">عن الجامعة</a></li>
+                <li><a href="colleges.html" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                <li><a href="tuition.html" class="active" data-i18n="nav-tuition">أقساط الدراسة</a></li>
+                <li><a href="admin.html" class="btn btn-outline" style="padding:6px 14px; margin-left:5px;" target="_blank"><i class="fas fa-user-shield"></i> لوحة التحكم</a></li>
+                <li><a href="admission.html" class="btn btn-primary" style="padding:8px 20px;box-shadow:none;" data-i18n="nav-register">سجل الآن</a></li>
+                <li><button id="langToggleBtn" onclick="toggleLang()">EN</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container animate-on-scroll">
+            <h1 data-i18n="page-tuition-h1">أقساط الدراسة والحد الأدنى للقبول</h1>
+            <p data-i18n="page-tuition-p">جدول شامل بأقساط الدراسة السنوية لجميع كليات وأقسام جامعة المعارف الأهلية ومعدلات القبول المقرة</p>
+        </div>
+    </div>
+
+    <section class="section container">
+        <div class="tuition-table-wrapper animate-on-scroll">
+            <table class="tuition-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الكلية / القسم</th>
+                        <th>التصنيف</th>
+                        <th>معدل القبول الصباحي</th>
+                        <th>معدل القبول المسائي</th>
+                        <th>القسط السنوي (دينار عراقي)</th>
+                        <th>طريقة الدفع</th>
+                    </tr>
+                </thead>
+                <tbody id="tuitionTableBody">
+                    <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">جاري تحميل جدول الأقساط والمعدلات...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="glass-panel" style="padding: 25px; border-radius: 16px; margin-top: 30px;">
+            <h3><i class="fas fa-info-circle" style="color: var(--accent-color);"></i> ملاحظات هامة حول دفع الأقساط</h3>
+            <ul style="margin-top: 15px; padding-right: 20px; color: var(--text-muted); line-height: 1.8;">
+                <li>يتم دفع القسط السنوي على 4 دفعات متساوية مقسمة خلال العام الدراسي.</li>
+                <li>تخضع جميع معدلات القبول إلى تعليمات وزارة التعليم العالي والبحث العلمي وتحديثات الجامعة الرسمية.</li>
+                <li>تتوفر تخفيضات خاصة للطلبة الأوائل والأخوة وأبناء الشهداء والكوادر الطبية.</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-about">
+                <a href="#" class="logo"><i class="fas fa-university"></i> <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span></a>
+                <p data-i18n="footer-about">صرح تعليمي يهدف للارتقاء بالمستوى الأكاديمي والبحثي لتخريج كفاءات تساهم في بناء المجتمع وفقا لمعايير الجودة الشاملة.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer-links-h">روابط سريعة</h4>
+                <ul>
+                    <li><a href="index.html" data-i18n="nav-home">الرئيسية</a></li>
+                    <li><a href="colleges.html" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                    <li><a href="tuition.html" data-i18n="nav-tuition">أقساط الدراسة</a></li>
+                    <li><a href="admission.html" data-i18n="nav-register">استمارة التقديم</a></li>
+                    <li><a href="admin.html" target="_blank"><i class="fas fa-lock"></i> لوحة التحكم</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4 data-i18n="footer-contact">تواصل معنا</h4>
+                <ul style="color: var(--text-muted)">
+                    <li style="margin-bottom:15px;"><i class="fas fa-map-marker-alt" style="margin-left:10px;color:var(--secondary-color)"></i> <span data-i18n="footer-addr">العراق، الأنبار، الرمادي</span></li>
+                    <li style="margin-bottom:15px;"><i class="fas fa-phone-alt" style="margin-left:10px;color:var(--secondary-color)"></i> 7393</li>
+                    <li><i class="fas fa-globe" style="margin-left:10px;color:var(--secondary-color)"></i> WWW.UOA.EDU.IQ</li>
+                </ul>
+            </div>
+        </div>
+        <div class="container">
+            <div class="copyright" data-i18n="footer-copy">&copy; 2026 جميع الحقوق محفوظة لجامعة المعارف الأهلية</div>
+        </div>
+    </footer>
+
+    <script defer src="js/main.js"></script>
+    <script defer src="js/lang.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadTuitionTable);
+
+        function loadTuitionTable() {
+            fetch('/api/departments')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderTuitionRows(data.data);
+                }
+            })
+            .catch(err => console.error('Error fetching tuition table:', err));
+        }
+
+        function renderTuitionRows(depts) {
+            const tbody = document.getElementById('tuitionTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            depts.forEach((d, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td>
+                        <strong>${d.college_name_ar}</strong> - ${d.dept_name_ar}
+                    </td>
+                    <td>${getCatBadge(d.category)}</td>
+                    <td><strong style="color: var(--accent-color);">${d.morning_avg}%</strong></td>
+                    <td><strong style="color: var(--secondary-color);">${d.evening_avg}%</strong></td>
+                    <td><span class="fee-badge">${d.tuition_fee.toLocaleString()} دينار</span></td>
+                    <td>على 4 دفعات متساوية</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getCatBadge(cat) {
+            if (cat === 'medical') return 'الطبية والصحية';
+            if (cat === 'engineering') return 'الهندسة والعلوم';
+            return 'العلوم الإنسانية';
+        }
+    </script>
+</body>
+</html>

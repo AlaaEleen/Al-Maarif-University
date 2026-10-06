@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الاستمارة الإلكترونية | جامعة المعارف</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        #langToggleBtn { background:transparent; border:1.5px solid var(--glass-border); color:var(--text-light); padding:6px 14px; border-radius:50px; cursor:pointer; font-family:inherit; font-size:0.9rem; font-weight:700; transition:var(--transition); letter-spacing:1px; }
+        #langToggleBtn:hover { background:var(--secondary-color); border-color:var(--secondary-color); color:#fff; }
+        .admission-bg {
+            min-height: 100vh;
+            padding-top: 100px;
+            background: linear-gradient(135deg, rgba(11, 12, 16, 0.9) 0%, rgba(31, 40, 51, 0.95) 100%), url('assets/images/hero.webp') center/cover fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 50px;
+        }
+
+        .form-header { text-align: center; margin-bottom: 40px; }
+        .form-header h1 { font-size: 2.5rem; color: var(--accent-color); margin-bottom: 10px; }
+        .form-header p { color: var(--text-light); font-size: 1.1rem; }
+
+        .steps-container { display: flex; justify-content: center; margin-bottom: 40px; gap: 20px; }
+        .step-dot {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--dark-surface); border: 2px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: var(--text-muted); transition: var(--transition);
+        }
+        .step-dot.active { background: var(--secondary-color); border-color: var(--secondary-color); color: #fff; box-shadow: 0 0 15px rgba(0, 180, 216, 0.5); }
+        .required-asterisk { color: #e74c3c; margin-right: 5px; }
+
+        /* Eligibility Notice Badge */
+        .eligibility-notice {
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: none;
+        }
+        .eligibility-notice.eligible { background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.5); color: #2ecc71; }
+        .eligibility-notice.not-eligible { background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); color: #ff6b6b; }
+    </style>
+</head>
+<body>
+
+    <header class="scrolled">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-university"></i>
+                <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span>
+            </a>
+            <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
+            <ul class="nav-links">
+                <li><a href="index.html" data-i18n="nav-home">الرئيسية</a></li>
+                <li><a href="index.html#about" data-i18n="nav-about">عن الجامعة</a></li>
+                <li><a href="colleges.html" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                <li><a href="tuition.html" data-i18n="nav-tuition">أقساط الدراسة</a></li>
+                <li><a href="admin.html" class="btn btn-outline" style="padding:6px 14px; margin-left:5px;" target="_blank"><i class="fas fa-user-shield"></i> لوحة التحكم</a></li>
+                <li><a href="admission.html" class="btn btn-primary active" style="padding: 8px 20px; box-shadow: none;" data-i18n="nav-register">سجل الآن</a></li>
+                <li><button id="langToggleBtn" onclick="toggleLang()">EN</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="admission-bg">
+        <div class="container animate-on-scroll">
+            <div class="form-wrapper glass-panel">
+                
+                <div class="form-header">
+                    <h1 data-i18n="page-admission-title">استمارة التسجيل المبدئي</h1>
+                    <p data-i18n="page-admission-p">يرجى ملء البيانات بدقة ليتسنى لفريق القبول والتسجيل التواصل معك</p>
+                </div>
+
+                <div class="steps-container">
+                    <div class="step-dot active">1</div>
+                    <div class="step-dot">2</div>
+                    <div class="step-dot">3</div>
+                </div>
+
+                <form id="admissionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="lbl-name">الاسم الرباعي</span> <span class="required-asterisk">*</span></label>
+                            <input type="text" id="inputStudentName" name="student_name" class="form-control" data-i18n-ph="ph-name" placeholder="أدخل اسمك الرباعي هنا" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="lbl-phone">رقم الهاتف (واتساب)</span> <span class="required-asterisk">*</span></label>
+                            <input type="tel" id="inputPhone" name="phone" class="form-control" data-i18n-ph="ph-phone" placeholder="07X XXXX XXXX" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="lbl-email">البريد الإلكتروني</span> <span class="required-asterisk">*</span></label>
+                            <input type="email" id="inputEmail" name="email" class="form-control" data-i18n-ph="ph-email" placeholder="example@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="lbl-city">المحافظة / السكن</span> <span class="required-asterisk">*</span></label>
+                            <select id="selectCity" name="city" class="form-control" required>
+                                <option value="" disabled selected data-i18n="opt-select">اختر المحافظة...</option>
+                                <option data-i18n="city-anb">الأنبار</option>
+                                <option data-i18n="city-bgd">بغداد</option>
+                                <option data-i18n="city-erbil">أربيل</option>
+                                <option data-i18n="city-basra">البصرة</option>
+                                <option data-i18n="city-other">محافظة أخرى</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;" data-i18n="form-sec2">البيانات الأكاديمية ومعدل القبول</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="lbl-branch">الفرع الدراسي</span> <span class="required-asterisk">*</span></label>
+                            <select id="selectBranch" name="study_branch" class="form-control" required>
+                                <option value="" disabled selected data-i18n="opt-select">اختر الفرع...</option>
+                                <option data-i18n="branch-bio">العلمي - الأحيائي</option>
+                                <option data-i18n="branch-app">العلمي - التطبيقي</option>
+                                <option data-i18n="branch-lit">الأدبي</option>
+                                <option data-i18n="branch-voc">المهني / الصناعي</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="lbl-grade">المعدل الدراسي في السادس</span> <span class="required-asterisk">*</span></label>
+                            <input type="number" id="inputGrade" name="high_school_avg" class="form-control" data-i18n-ph="ph-grade" placeholder="مثال: 85.5" step="0.01" min="50" max="100" oninput="checkEligibility()" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><span data-i18n="lbl-college">الكلية / القسم المراد التسجيل فيها</span> <span class="required-asterisk">*</span></label>
+                        <select id="selectDept" name="dept_id" class="form-control" onchange="checkEligibility()" required>
+                            <option value="" disabled selected data-i18n="opt-select">جاري تحميل الأقسام من قاعدة البيانات...</option>
+                        </select>
+                    </div>
+
+                    <div id="eligibilityNotice" class="eligibility-notice"></div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label" data-i18n="lbl-studytype">نوع الدراسة المفضل</label>
+                        <select id="selectStudyType" name="study_type" class="form-control" onchange="checkEligibility()">
+                            <option value="صباحي" selected data-i18n="study-morn">صباحي</option>
+                            <option value="مسائي" data-i18n="study-eve">مسائي</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="lbl-notes">ملاحظات إضافية (اختياري)</label>
+                        <textarea id="inputNotes" name="notes" class="form-control" data-i18n-ph="ph-notes" placeholder="اكتب أي استفسار أو ملاحظة هنا..."></textarea>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; font-size: 1.2rem;">
+                            <span data-i18n="btn-submit">حفظ الاستمارة في قاعدة البيانات والإرسال</span> <i class="fas fa-paper-plane" style="margin-right: 10px;"></i>
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 style="color: var(--success); margin-bottom: 15px;" data-i18n="modal-h2">تم التسجيل بنجاح!</h2>
+            <p style="margin-bottom: 25px;" data-i18n="modal-p">أهلاً بك في عائلة جامعة المعارف. قمنا باستلام بياناتك وحفظها في قاعدة البيانات، وسيتم التواصل معك قريباً لاستكمال الإجراءات.</p>
+            <button class="btn btn-primary" id="closeModal" style="width: 100%;" data-i18n="modal-btn">العودة للرئيسية</button>
+        </div>
+    </div>
+
+    <script defer src="js/main.js"></script>
+    <script defer src="js/lang.js"></script>
+    <script>
+    let dbDepartments = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDepartmentsDropdown();
+        setupAdmissionForm();
+    });
+
+    function loadDepartmentsDropdown() {
+        fetch('/api/departments')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                dbDepartments = data.data;
+                const select = document.getElementById('selectDept');
+                select.innerHTML = '<option value="" disabled selected>اختر الكلية / القسم المطلوب...</option>';
+
+                dbDepartments.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.dataset.morning = d.morning_avg;
+                    opt.dataset.evening = d.evening_avg;
+                    opt.dataset.name = `${d.college_name_ar} - ${d.dept_name_ar}`;
+                    opt.textContent = `${d.college_name_ar} - ${d.dept_name_ar} (حد الأدنى: ${d.morning_avg}%)`;
+                    select.appendChild(opt);
+                });
+            }
+        })
+        .catch(err => console.error('Error loading departments select:', err));
+    }
+
+    function checkEligibility() {
+        const gradeInput = document.getElementById('inputGrade');
+        const deptSelect = document.getElementById('selectDept');
+        const studyTypeSelect = document.getElementById('selectStudyType');
+        const notice = document.getElementById('eligibilityNotice');
+
+        const studentGrade = parseFloat(gradeInput.value);
+        const selectedDeptId = deptSelect.value;
+        const studyType = studyTypeSelect.value;
+
+        if (!studentGrade || !selectedDeptId) {
+            notice.style.display = 'none';
+            return;
+        }
+
+        const dept = dbDepartments.find(d => d.id == selectedDeptId);
+        if (!dept) return;
+
+        const cutoff = studyType === 'مسائي' ? dept.evening_avg : dept.morning_avg;
+
+        notice.style.display = 'block';
+        if (studentGrade >= cutoff) {
+            notice.className = 'eligibility-notice eligible';
+            notice.innerHTML = `<i class="fas fa-check-circle"></i> تهانينا! معدلك (${studentGrade}%) أعلى من حد القبول الأدنى في (${dept.dept_name_ar}) المحدد بـ (${cutoff}%). أنت مؤهل للتسجيل!`;
+        } else {
+            notice.className = 'eligibility-notice not-eligible';
+            notice.innerHTML = `<i class="fas fa-exclamation-triangle"></i> تنبيه: معدلك (${studentGrade}%) أقل من الحد الأدنى المقبول في هذا القسم للدراسة الـ${studyType} (${cutoff}%).`;
+        }
+    }
+
+    function setupAdmissionForm() {
+        document.getElementById('admissionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري حفظ البيانات...`;
+
+            const selectedDeptId = document.getElementById('selectDept').value;
+            const selectedDeptObj = dbDepartments.find(d => d.id == selectedDeptId);
+
+            const payload = {
+                student_name: document.getElementById('inputStudentName').value.trim(),
+                phone: document.getElementById('inputPhone').value.trim(),
+                email: document.getElementById('inputEmail').value.trim(),
+                city: document.getElementById('selectCity').value,
+                study_branch: document.getElementById('selectBranch').value,
+                high_school_avg: parseFloat(document.getElementById('inputGrade').value),
+                dept_id: selectedDeptId,
+                dept_name: selectedDeptObj ? `${selectedDeptObj.college_name_ar} - ${selectedDeptObj.dept_name_ar}` : 'غير محدد',
+                study_type: document.getElementById('selectStudyType').value,
+                notes: document.getElementById('inputNotes').value.trim()
+            };
+
+            fetch('/api/registrations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('successModal').classList.add('active');
+                    document.getElementById('admissionForm').reset();
+                    document.getElementById('eligibilityNotice').style.display = 'none';
+                } else {
+                    alert(data.message || 'خطأ أثناء حفظ البيانات');
+                }
+            })
+            .catch(err => alert('خطأ في الإتصال بالسيرفر'))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<span>حفظ الاستمارة في قاعدة البيانات والإرسال</span> <i class="fas fa-paper-plane" style="margin-right: 10px;"></i>`;
+            });
+        });
+    }
+
+    const closeBtn = document.getElementById('closeModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('successModal').classList.remove('active');
+            window.location.href = 'index.html';
+        });
+    }
+    </script>
+</body>
+</html>

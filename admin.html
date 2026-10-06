@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم والإدارة | جامعة المعارف</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style & Admin Style -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+    <!-- LOGIN MODAL / SCREEN -->
+    <div id="loginScreen" class="admin-login-overlay">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <div class="login-logo-icon"><i class="fas fa-user-shield"></i></div>
+                <h2>بوابة إدارة جامعة المعارف</h2>
+                <p>سجل الدخول للتحكم بالمعدلات والتقديمات والأقسام</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-user"></i> اسم المستخدم</label>
+                    <input type="text" id="loginUsername" class="form-control" placeholder="أدخل اسم المستخدم (مثلاً: admin)" required>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label"><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <div id="loginAlert" class="alert-box error" style="display: none; margin-top: 15px;"></div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 25px; padding: 12px; font-size: 1.1rem; font-weight: 700;">
+                    <i class="fas fa-sign-in-alt" style="margin-left: 8px;"></i> تسجيل الدخول
+                </button>
+            </form>
+            <div class="login-footer-hint">
+                <span>اسم المستخدم الافتراضي: <strong>admin</strong> | كلمة المرور: <strong>admin123</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD LAYOUT -->
+    <div id="adminLayout" class="admin-layout" style="display: none;">
+        
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-university sidebar-logo-icon"></i>
+                <div class="sidebar-brand">
+                    <h3>جامعة المعارف</h3>
+                    <span>لوحة التحكم الرئيسية</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#overview" class="menu-item active" onclick="switchTab('overview', this)">
+                    <i class="fas fa-chart-line"></i> <span>نظرة عامة</span>
+                </a>
+                <a href="#departments" class="menu-item" onclick="switchTab('departments', this)">
+                    <i class="fas fa-sliders-h"></i> <span>التحكم بالمعدلات والأقسام</span>
+                </a>
+                <a href="#students" class="menu-item" onclick="switchTab('students', this)">
+                    <i class="fas fa-user-graduate"></i> <span>الطلاب المسجلين</span>
+                    <span class="badge-count" id="sidebarPendingCount">0</span>
+                </a>
+                <a href="#addDept" class="menu-item" onclick="openAddDeptModal()">
+                    <i class="fas fa-plus-circle"></i> <span>إضافة كلية / قسم جديد</span>
+                </a>
+                <a href="index.html" target="_blank" class="menu-item">
+                    <i class="fas fa-external-link-alt"></i> <span>معاينة الموقع العام</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                        <strong id="adminUserName">المدير العام</strong>
+                        <small>مسؤول النظام</small>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logoutAdmin()" title="تسجيل الخروج">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="admin-main">
+            
+            <!-- TOP NAVBAR -->
+            <header class="admin-topbar glass-panel">
+                <div class="topbar-title">
+                    <h2 id="pageTitle">نظرة عامة والمعدلات الحالية</h2>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-accent" onclick="openAddDeptModal()" style="padding: 8px 16px; font-size: 0.9rem;">
+                        <i class="fas fa-plus"></i> إضافة كلية / قسم
+                    </button>
+                    <button class="btn btn-outline" onclick="loadDashboardData()" title="تحديث البيانات" style="padding: 8px 12px;">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB 1: OVERVIEW & METRICS -->
+            <section id="tabOverview" class="tab-content active">
+                
+                <!-- STATS CARDS -->
+                <div class="stats-grid">
+                    <div class="admin-stat-card glass-panel border-accent">
+                        <div class="stat-icon-wrapper accent">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">إجمالي المتقدمين</span>
+                            <h3 id="statTotalStudents" class="stat-value">0</h3>
+                            <span class="stat-sub">طالب مسجل حتى الآن</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stat-card glass-panel border-warning">
+                        <div class="stat-icon-wrapper warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">قيد الانتظار</span>
+                            <h3 id="statPendingStudents" class="stat-value">0</h3>
+                            <span class="stat-sub">طلبات تتطلب مراجعة</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stat-card glass-panel border-success">
+                        <div class="stat-icon-wrapper success">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">الطلبات المقبولة</span>
+                            <h3 id="statAcceptedStudents" class="stat-value">0</h3>
+                            <span class="stat-sub">تم قبولهم في الأقسام</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stat-card glass-panel border-info">
+                        <div class="stat-icon-wrapper info">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">الكليات والأقسام</span>
+                            <h3 id="statTotalDepts" class="stat-value">0</h3>
+                            <span class="stat-sub">قسم علمي متاح للتسجيل</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS & QUICK DEPT EDIT -->
+                <div class="section-card glass-panel style-card" style="margin-top: 30px;">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3><i class="fas fa-fire" style="color: var(--accent-color)"></i> تحديث معدلات القبول السريعة</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-muted)">يمكنك رفع أو خفض معدل أي قسم بنقرة واحدة، وسيتم التحديث مباشرة في كافة صفحات الموقع.</p>
+                        </div>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="quickSearchInput" onkeyup="filterQuickDepts()" placeholder="بحث باسم القسم أو الكلية...">
+                        </div>
+                    </div>
+
+                    <div id="quickDeptsGrid" class="quick-depts-grid">
+                        <!-- Dynamic department cards will be loaded here -->
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- TAB 2: DEPARTMENTS & AVERAGE CONTROLS (FULL TABLE) -->
+            <section id="tabDepartments" class="tab-content" style="display: none;">
+                <div class="section-card glass-panel">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3><i class="fas fa-sliders-h" style="color: var(--secondary-color)"></i> إدارة الأقسام ومعدلات القبول والأقساط</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-muted)">التحكم الكامل بمعدل الصباحي والمسائي والأقساط وتفاصيل كل قسم</p>
+                        </div>
+                        <div class="flex-gap">
+                            <button class="btn btn-accent" onclick="openAddDeptModal()">
+                                <i class="fas fa-plus"></i> إضافة قسم جديد
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive" style="margin-top: 20px;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الكلية والقسم</th>
+                                    <th>التصنيف</th>
+                                    <th>المعدل الصباحي</th>
+                                    <th>المعدل المسائي</th>
+                                    <th>القسط السنوي (دينار)</th>
+                                    <th>تغيير سريع للمعدل</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="departmentsTableBody">
+                                <!-- Dynamic table rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 3: REGISTERED STUDENTS MANAGEMENT -->
+            <section id="tabStudents" class="tab-content" style="display: none;">
+                <div class="section-card glass-panel">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3><i class="fas fa-user-graduate" style="color: var(--accent-color)"></i> استمارات الطلاب المسجلين</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-muted)">مراجعة وتغيير حالة الطلبات وتصفيتها بسهولة</p>
+                        </div>
+                        
+                        <div class="filter-tabs-wrapper">
+                            <button class="filter-tab active" onclick="filterStudents('all', this)">الكل</button>
+                            <button class="filter-tab" onclick="filterStudents('pending', this)">قيد الانتظار</button>
+                            <button class="filter-tab" onclick="filterStudents('accepted', this)">المقبولين</button>
+                            <button class="filter-tab" onclick="filterStudents('rejected', this)">المرفوضين</button>
+                        </div>
+                    </div>
+
+                    <div class="search-bar-row" style="margin: 20px 0;">
+                        <div class="search-box full">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="studentSearchInput" onkeyup="searchStudents()" placeholder="ابحث باسم الطالب، رقم الواتساب، البريد، أو الكلية...">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم الطالب</th>
+                                    <th>رقم الواتساب</th>
+                                    <th>المحافظة</th>
+                                    <th>الفرع</th>
+                                    <th>المعدل</th>
+                                    <th>الكلية / القسم المطلوبة</th>
+                                    <th>نوع الدراسة</th>
+                                    <th>الحالة</th>
+                                    <th>تاريخ التقديم</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <!-- Dynamic student rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: ADD / EDIT DEPARTMENT -->
+    <div id="deptModal" class="admin-modal-overlay" style="display: none;">
+        <div class="admin-modal-card glass-panel">
+            <div class="modal-header">
+                <h3 id="deptModalTitle"><i class="fas fa-plus-circle"></i> إضافة كلية / قسم جديد</h3>
+                <button class="modal-close-btn" onclick="closeDeptModal()">&times;</button>
+            </div>
+            
+            <form id="deptForm" onsubmit="saveDepartment(event)">
+                <input type="hidden" id="deptFormId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">اسم الكلية (بالعربية) <span class="req">*</span></label>
+                        <input type="text" id="deptFormCollegeAr" class="form-control" placeholder="مثال: كلية الهندسة" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">اسم الكلية (بالإنكليزية)</label>
+                        <input type="text" id="deptFormCollegeEn" class="form-control" placeholder="Example: College of Engineering">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">اسم القسم (بالعربية) <span class="req">*</span></label>
+                        <input type="text" id="deptFormNameAr" class="form-control" placeholder="مثال: قسم الأمن السيبراني" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">اسم القسم (بالإنكليزية)</label>
+                        <input type="text" id="deptFormNameEn" class="form-control" placeholder="Example: Cybersecurity Dept">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">تصنيف الكلية <span class="req">*</span></label>
+                        <select id="deptFormCategory" class="form-control" required>
+                            <option value="medical">الطبية والصحية</option>
+                            <option value="engineering">الهندسة والعلوم</option>
+                            <option value="humanities">العلوم الإنسانية والإدارية</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">القسط السنوي (بالدينار العراقي) <span class="req">*</span></label>
+                        <input type="number" id="deptFormTuition" class="form-control" placeholder="مثال: 2500000" step="50000" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">معدل القبول الصباحي <span class="req">*</span></label>
+                        <input type="number" id="deptFormMorningAvg" class="form-control" placeholder="مثال: 65.5" step="0.1" min="50" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">معدل القبول المسائي <span class="req">*</span></label>
+                        <input type="number" id="deptFormEveningAvg" class="form-control" placeholder="مثال: 60.0" step="0.1" min="50" max="100" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">أيقونة FontAwesome</label>
+                        <input type="text" id="deptFormIcon" class="form-control" placeholder="مثال: fa-laptop-code">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">مسار صورة القسم</label>
+                        <input type="text" id="deptFormImage" class="form-control" placeholder="assets/images/col_cybersecurity.webp">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">وصف القسم (بالعربية)</label>
+                    <textarea id="deptFormDescAr" class="form-control" rows="2" placeholder="نبذة مختصرة عن التخصص وآفاقه الوظيفية..."></textarea>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-outline" onclick="closeDeptModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-accent" style="min-width: 140px;">
+                        <i class="fas fa-save" style="margin-left: 6px;"></i> حفظ وتطبيق
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/admin.js"></script>
+</body>
+</html>

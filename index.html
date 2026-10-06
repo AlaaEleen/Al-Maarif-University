@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جامعة المعارف | بوابة المستقبل</title>
+    <meta name="description" content="جامعة المعارف الأهلية، صرح علمي متقدم يوفر بيئة تعليمية حديثة ومبتكرة في مختلف التخصصات.">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ── Language Toggle Button ── */
+        #langToggleBtn {
+            background: transparent;
+            border: 1.5px solid var(--glass-border);
+            color: var(--text-light);
+            padding: 6px 14px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: var(--transition);
+            letter-spacing: 1px;
+        }
+        #langToggleBtn:hover {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: #fff;
+        }
+
+        /* ── Floating QR Code Button ── */
+        .qr-floater {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 15px;
+        }
+
+        .qr-btn {
+            width: 55px;
+            height: 55px;
+            background: var(--accent-color);
+            color: var(--dark-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(252, 163, 17, 0.4);
+            transition: var(--transition);
+            border: none;
+            animation: pulse-glow 2s infinite;
+        }
+
+        .qr-btn:hover {
+            transform: scale(1.1);
+            background: #fff;
+        }
+
+        .qr-popup {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 260px;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .qr-input-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .qr-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 0.8rem;
+            outline: none;
+        }
+
+        .qr-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .qr-update-btn {
+            background: var(--accent-color);
+            color: var(--dark-bg);
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .qr-popup.active {
+            display: flex;
+            animation: fadeInData 0.4s ease-out forwards;
+        }
+
+        #qrcode {
+            background: #fff;
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        #qrcode img {
+            display: block;
+        }
+
+        .qr-text {
+            font-size: 0.85rem;
+            color: #fff;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-university"></i>
+                <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span>
+            </a>
+            
+            <div class="mobile-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html" class="active" data-i18n="nav-home">الرئيسية</a></li>
+                <li><a href="index.html#about" data-i18n="nav-about">عن الجامعة</a></li>
+                <li><a href="colleges.html" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                <li><a href="tuition.html" data-i18n="nav-tuition">أقساط الدراسة</a></li>
+                <li><a href="admin.html" class="btn btn-outline" style="padding:6px 14px; margin-left:5px;" target="_blank"><i class="fas fa-user-shield"></i> لوحة التحكم</a></li>
+                <li><a href="admission.html" class="btn btn-primary" style="padding: 8px 20px; box-shadow: none;" data-i18n="nav-register">سجل الآن</a></li>
+                <li><button id="langToggleBtn" onclick="toggleLang()">EN</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <img loading="lazy" src="assets/images/hero.webp" alt="University Campus Overview" class="hero-bg">
+        <div class="hero-overlay"></div>
+        <div class="container relative z-10">
+            <div class="hero-content">
+                <span class="hero-tag" data-i18n="hero-tag">بوابة التميز والإبداع</span>
+                <h1><span data-i18n="hero-h1-pre">ابنِ مستقبلك في </span><span data-i18n="hero-h1-span">جامعة المعارف</span></h1>
+                <p style="margin-top: 20px; font-size: 1.2rem; color: #fff; max-width: 500px;" data-i18n="hero-p">
+                    نوفر لك بيئة تعليمية حديثة، ومختبرات متطورة، وكوادر تدريسية متميزة لتكون قائد الطليعة في مجالك الأكاديمي والمهني.
+                </p>
+                <div class="hero-btns">
+                    <a href="colleges.html" class="btn btn-accent"><span data-i18n="hero-btn1">استكشف الكليات</span> <i class="fas fa-arrow-left" style="margin-right: 8px;"></i></a>
+                    <a href="admission.html" class="btn btn-outline" data-i18n="hero-btn2">التسجيل الإلكتروني</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="container" style="position: relative; z-index: 20;">
+        <div class="stats glass-panel">
+            <div class="stat-card">
+                <i class="fas fa-graduation-cap stat-icon"></i>
+                <div class="stat-number">16+</div>
+                <div class="stat-label" data-i18n="stat1-label">أقسام علمية</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-microscope stat-icon"></i>
+                <div class="stat-number">40+</div>
+                <div class="stat-label" data-i18n="stat2-label">مختبرات متطورة</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-users stat-icon"></i>
+                <div class="stat-number">10k+</div>
+                <div class="stat-label" data-i18n="stat3-label">طالب ومتميز</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-award stat-icon"></i>
+                <div class="stat-number">100%</div>
+                <div class="stat-label" data-i18n="stat4-label">اعتماد أكاديمي</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section container">
+        <div class="animate-on-scroll" style="display: flex; gap: 40px; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 300px;">
+                <h2 style="margin-bottom: 20px;" data-i18n="about-h2">الرؤية والرسالة</h2>
+                <p style="margin-bottom: 15px;" data-i18n="about-p1">
+                    نسعى في جامعة المعارف لأن نكون في مصاف الجامعات المتقدمة محلياً وعالمياً من خلال تقديم برامج تعليمية عالية الجودة تتوافق مع معايير الجودة العالمية وتلبي احتياجات سوق العمل.
+                </p>
+                <p data-i18n="about-p2">
+                    مهمتنا هي بناء جيل معرفي قادر على الابتكار والابداع، مزود بالمهارات التقنية والمعرفية التي تمكنه من المساهمة الفعالة في بناء المجتمع وتطوير مخرجات البحث العلمي في البلاد.
+                </p>
+                <ul style="margin-top: 20px; list-style: none; padding: 0;">
+                    <li style="margin-bottom: 10px; color: var(--text-light);"><i class="fas fa-check-circle" style="color: var(--success); margin-left: 10px;"></i> <span data-i18n="about-li1">استخدام أحدث التقنيات التعليمية.</span></li>
+                    <li style="margin-bottom: 10px; color: var(--text-light);"><i class="fas fa-check-circle" style="color: var(--success); margin-left: 10px;"></i> <span data-i18n="about-li2">توأمة علمية مع أرقى الجامعات العالمية.</span></li>
+                    <li style="margin-bottom: 10px; color: var(--text-light);"><i class="fas fa-check-circle" style="color: var(--success); margin-left: 10px;"></i> <span data-i18n="about-li3">بيئة جامعية متكاملة ومحفزة.</span></li>
+                </ul>
+            </div>
+            <div style="flex: 1; min-width: 300px; position: relative;">
+                <div style="border-radius: 16px; overflow: hidden; border: 2px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <img loading="lazy" src="assets/images/medical.webp" alt="University Facilities" style="width: 100%; display: block; transform: scale(1.05); transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1)'" onmouseout="this.style.transform='scale(1.05)'">
+                </div>
+                <div style="position: absolute; bottom: -20px; left: -20px; width: 100px; height: 100px; background: var(--accent-color); z-index: -1; filter: blur(50px); opacity: 0.6;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Colleges Overview -->
+    <section class="section container" style="background: rgba(255,255,255,0.02); border-radius: 16px; margin-bottom: 50px;">
+        <h2 class="animate-on-scroll" data-i18n="colleges-h2">كلياتنا الرائدة</h2>
+        <p style="text-align: center; max-width: 600px; margin: -20px auto 30px;" class="animate-on-scroll" data-i18n="colleges-p">
+            تضم جامعة المعارف مجموعة من الكليات العلمية والإنسانية الرائدة التي تتيح للطلاب مجموعة واسعة من الخيارات.
+        </p>
+
+        <div class="cards-grid animate-on-scroll">
+            <div class="college-card">
+                <div class="card-img-wrapper">
+                    <img loading="lazy" src="assets/images/medical.webp" alt="كلية التقنيات الطبية">
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card1-title">المجموعة الطبية والصحية</h3>
+                    <p class="card-desc" data-i18n="card1-desc">تضم كليات (الصيدلة، طب الأسنان، التقنيات الطبية) توفر أحدث المختبرات للجانب العملي.</p>
+                    <a href="colleges.html" class="card-action"><span data-i18n="card-action">التفاصيل</span> <i class="fas fa-arrow-left"></i></a>
+                </div>
+            </div>
+            
+            <div class="college-card">
+                <div class="card-img-wrapper">
+                    <img loading="lazy" src="assets/images/engineering.webp" alt="كلية الهندسة والتقنيات">
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card2-title">هندسة وتقنيات الحاسوب</h3>
+                    <p class="card-desc" data-i18n="card2-desc">تشمل أقسام الهندسة المدنية، الميكاترونكس وهندسة أنظمة الحاسبات الحديثة والروبوتكس.</p>
+                    <a href="colleges.html" class="card-action"><span data-i18n="card-action">التفاصيل</span> <i class="fas fa-arrow-left"></i></a>
+                </div>
+            </div>
+
+            <div class="college-card">
+                <div class="card-img-wrapper">
+                    <img loading="lazy" src="assets/images/hero.webp" alt="الكليات الإنسانية">
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card3-title">الكليات الإنسانية والإدارية</h3>
+                    <p class="card-desc" data-i18n="card3-desc">تخرج قادة المستقبل من قضاة، ومحامين، ومدراء شركات عبر كليتي القانون والإدارة والاقتصاد.</p>
+                    <a href="colleges.html" class="card-action"><span data-i18n="card-action">التفاصيل</span> <i class="fas fa-arrow-left"></i></a>
+                </div>
+            </div>
+
+            <div class="college-card">
+                <div class="card-img-wrapper">
+                    <img loading="lazy" src="assets/images/col_sports_home.webp" alt="التربية البدنية وعلوم الرياضة">
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card4-title">التربية البدنية وعلوم الرياضة</h3>
+                    <p class="card-desc" data-i18n="card4-desc">نعد أجيالاً من الرياضيين والمدربين المحترفين وفق أحدث المناهج العلمية والتدريبية العالمية.</p>
+                    <a href="colleges.html" class="card-action"><span data-i18n="card-action">التفاصيل</span> <i class="fas fa-arrow-left"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;" class="animate-on-scroll">
+            <a href="colleges.html" class="btn btn-primary" data-i18n="cards-btn">استعرض جميع الكليات والأقسام</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-about">
+                <a href="#" class="logo">
+                    <i class="fas fa-university"></i>
+                    <span data-i18n="logo-main">جامعة</span><span data-i18n="logo-span">المعارف</span>
+                </a>
+                <p data-i18n="footer-about">صرح تعليمي يهدف للارتقاء بالمستوى الأكاديمي والبحثي لتخريج كفاءات تساهم في بناء المجتمع وفقا لمعايير الجودة الشاملة.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-links">
+                <h4 data-i18n="footer-links-h">روابط سريعة</h4>
+                <ul>
+                    <li><a href="index.html" data-i18n="nav-home">الرئيسية</a></li>
+                    <li><a href="colleges.html" data-i18n="nav-colleges">الكليات والأقسام</a></li>
+                    <li><a href="admission.html" data-i18n="nav-register">استمارة التقديم</a></li>
+                    <li><a href="admin.html" target="_blank"><i class="fas fa-lock"></i> لوحة التحكم</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-links">
+                <h4 data-i18n="footer-contact">تواصل معنا</h4>
+                <ul style="color: var(--text-muted)">
+                    <li style="margin-bottom: 15px;"><i class="fas fa-map-marker-alt" style="margin-left: 10px; color: var(--secondary-color)"></i> <span data-i18n="footer-addr">العراق، الأنبار، الرمادي</span></li>
+                    <li style="margin-bottom: 15px;"><i class="fas fa-phone-alt" style="margin-left: 10px; color: var(--secondary-color)"></i> +964 78X XXX XXXX</li>
+                    <li><i class="fas fa-envelope" style="margin-left: 10px; color: var(--secondary-color)"></i> info@almaarif.edu.iq</li>
+                </ul>
+            </div>
+        </div>
+        <div class="container">
+                <span data-i18n="footer-copy">© 2026 جميع الحقوق محفوظة لجامعة المعارف الأهلية</span> | <span data-i18n="footer-dev">تم التصميم للتطوير المتقدم</span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script defer src="js/main.js"></script>
+    <script defer src="js/lang.js"></script>
+</body>
+</html>
