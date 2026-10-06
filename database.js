@@ -78,14 +78,6 @@ function initDB() {
   // Seed Initial Departments if table empty
   const deptCheck = db.prepare('SELECT count(*) as count FROM departments').get();
   if (deptCheck.count === 0) {
-    const insertDept = db.prepare(`
-      INSERT INTO departments (
-        dept_key, college_name_ar, college_name_en, dept_name_ar, dept_name_en,
-        category, morning_avg, evening_avg, tuition_fee, image_url, icon_class,
-        description_ar, description_en
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
     const defaultDepts = [
       [
         'dentistry', 'كلية طب الأسنان', 'College of Dentistry', 'كلية طب الأسنان', 'College of Dentistry',
@@ -185,13 +177,17 @@ function initDB() {
       ]
     ];
 
-    const insertTransaction = db.transaction((depts) => {
-      for (const d of depts) {
-        insertDept.run(...d);
-      }
-    });
+    const insertDept = db.prepare(`
+      INSERT INTO departments (
+        dept_key, college_name_ar, college_name_en, dept_name_ar, dept_name_en,
+        category, morning_avg, evening_avg, tuition_fee, image_url, icon_class,
+        description_ar, description_en
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
-    insertTransaction(defaultDepts);
+    for (const d of defaultDepts) {
+      insertDept.run(...d);
+    }
     console.log(`✅ Seeded ${defaultDepts.length} default colleges and departments.`);
   }
 }
