@@ -358,6 +358,546 @@
     </div>
 
     <!-- SCRIPTS -->
-    <script src="js/admin.js"></script>
+    <script>
+// --------------------------------------------------
+// AL-MAARIF COLLEGE ADMIN DASHBOARD CLIENT CONTROLLER
+// --------------------------------------------------
+
+const API_BASE = window.location.origin;
+let currentUser = null;
+let allDepartments = [];
+let allStudents = [];
+
+// Initialize Dashboard
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthToken();
+    setupLoginForm();
+});
+
+// Check JWT Token
+function checkAuthToken() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+        showLoginScreen();
+        return;
+    }
+
+    fetch(`${API_BASE}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            currentUser = data.user;
+            showDashboardLayout();
+            loadDashboardData();
+        } else {
+            logoutAdmin();
+        }
+    })
+    .catch(() => showLoginScreen());
+}
+
+// Show/Hide Screens
+function showLoginScreen() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminLayout').style.display = 'none';
+}
+
+function showDashboardLayout() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminLayout').style.display = 'flex';
+    if (currentUser) {
+        document.getElementById('adminUserName').textContent = currentUser.full_name || currentUser.username;
+    }
+}
+
+// Login Form Submit
+function setupLoginForm() {
+    const form = document.getElementById('loginForm');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        const alertBox = document.getElementById('loginAlert');
+
+        alertBox.style.display = 'none';
+
+        fetch(`${API_BASE}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                localStorage.setItem('adminToken', data.token);
+                currentUser = data.user;
+                showDashboardLayout();
+                loadDashboardData();
+            } else {
+                alertBox.textContent = data.message || 'خطأ في المصادقة';
+                alertBox.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            alertBox.textContent = 'حدث خطأ بالاتصال بالسيرفر';
+            alertBox.style.display = 'block';
+        });
+    });
+}
+
+// Logout
+function logoutAdmin() {
+    localStorage.removeItem('adminToken');
+    currentUser = null;
+    showLoginScreen();
+}
+
+// Load All Dashboard Data
+function loadDashboardData() {
+    fetchStats();
+    fetchDepartments();
+    fetchStudents('all');
+}
+
+// Get Stats
+function fetchStats() {
+    const token = localStorage.getItem('adminToken');
+    fetch(`${API_BASE}/api/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const s = data.data;
+            document.getElementById('statTotalStudents').textContent = s.totalStudents || 0;
+            document.getElementById('statPendingStudents').textContent = s.pendingCount || 0;
+            document.getElementById('statAcceptedStudents').textContent = s.acceptedCount || 0;
+            document.getElementById('statTotalDepts').textContent = s.totalDepartments || 0;
+            document.getElementById('sidebarPendingCount').textContent = s.pendingCount || 0;
+        }
+    })
+    .catch(err => console.error('Error fetching stats:', err));
+}
+
+// Get Departments
+function fetchDepartments() {
+    fetch(`${API_BASE}/api/departments`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            allDepartments = data.data;
+            renderQuickDepts(allDepartments);
+            renderDepartmentsTable(allDepartments);
+        }
+    })
+    .catch(err => console.error('Error fetching departments:', err));
+}
+
+// Render Quick Department Cards (with + / - grade controls)
+function renderQuickDepts(depts) {
+    const grid = document.getElementById('quickDeptsGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    if (depts.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 30px;">لا توجد أقسام مسجلة حالياً</div>';
+        return;
+    }
+
+    depts.forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'dept-ctrl-card';
+        card.innerHTML = `
+            <div class="dept-card-top">
+                <div class="dept-name-badge">
+                    <i class="fas ${d.icon_class || 'fa-graduation-cap'}"></i>
+                    <div>
+                        <h4>${d.dept_name_ar}</h4>
+                        <small style="color: var(--text-muted);">${d.college_name_ar}</small>
+                    </div>
+                </div>
+                <span class="dept-category-tag">${getCatLabel(d.category)}</span>
+            </div>
+
+            <!-- Morning Avg Control -->
+            <div class="grade-control-row">
+                <span class="grade-label">صباحي:</span>
+                <div class="grade-adjusters">
+                    <button class="grade-btn sub" onclick="changeGrade(${d.id}, 'morning', -1.0)">-1</button>
+                    <button class="grade-btn sub" onclick="changeGrade(${d.id}, 'morning', -0.5)">-0.5</button>
+                    <input type="number" id="morningInput_${d.id}" class="grade-input" value="${d.morning_avg}" step="0.1" min="50" max="100">
+                    <button class="grade-btn add" onclick="changeGrade(${d.id}, 'morning', 0.5)">+0.5</button>
+                    <button class="grade-btn add" onclick="changeGrade(${d.id}, 'morning', 1.0)">+1</button>
+                </div>
+            </div>
+
+            <!-- Evening Avg Control -->
+            <div class="grade-control-row">
+                <span class="grade-label">مسائي:</span>
+                <div class="grade-adjusters">
+                    <button class="grade-btn sub" onclick="changeGrade(${d.id}, 'evening', -1.0)">-1</button>
+                    <button class="grade-btn sub" onclick="changeGrade(${d.id}, 'evening', -0.5)">-0.5</button>
+                    <input type="number" id="eveningInput_${d.id}" class="grade-input" value="${d.evening_avg}" step="0.1" min="50" max="100">
+                    <button class="grade-btn add" onclick="changeGrade(${d.id}, 'evening', 0.5)">+0.5</button>
+                    <button class="grade-btn add" onclick="changeGrade(${d.id}, 'evening', 1.0)">+1</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 15px;">
+                <button class="btn btn-accent" style="flex: 1; padding: 6px; font-size: 0.85rem;" onclick="saveGrade(${d.id})">
+                    <i class="fas fa-check"></i> حفظ التحديث
+                </button>
+                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" onclick="editDeptModal(${d.id})" title="تعديل التفاصيل">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Render Departments Table
+function renderDepartmentsTable(depts) {
+    const tbody = document.getElementById('departmentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    depts.forEach((d, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>
+                <strong>${d.dept_name_ar}</strong>
+                <br><small style="color: var(--text-muted);">${d.college_name_ar}</small>
+            </td>
+            <td><span class="dept-category-tag">${getCatLabel(d.category)}</span></td>
+            <td><strong style="color: var(--accent-color);">${d.morning_avg}%</strong></td>
+            <td><strong style="color: var(--secondary-color);">${d.evening_avg}%</strong></td>
+            <td>${d.tuition_fee.toLocaleString()} دينار</td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;" onclick="changeGrade(${d.id}, 'morning', 0.5)">صباحي +0.5</button>
+                    <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;" onclick="changeGrade(${d.id}, 'morning', -0.5)">صباحي -0.5</button>
+                </div>
+            </td>
+            <td>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-outline" style="padding: 5px 10px;" onclick="editDeptModal(${d.id})" title="تعديل"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-outline" style="padding: 5px 10px; color: #e74c3c; border-color: rgba(231,76,60,0.4);" onclick="deleteDept(${d.id}, '${d.dept_name_ar}')" title="حذف"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Change Grade Helper (+0.5, -0.5, +1.0, -1.0)
+function changeGrade(deptId, type, delta) {
+    const inputId = type === 'morning' ? `morningInput_${deptId}` : `eveningInput_${deptId}`;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    let currentVal = parseFloat(input.value) || 50.0;
+    let newVal = Math.round((currentVal + delta) * 10) / 10;
+    if (newVal < 50) newVal = 50;
+    if (newVal > 100) newVal = 100;
+
+    input.value = newVal;
+    saveGrade(deptId);
+}
+
+// Save Grade Change to Database
+function saveGrade(deptId) {
+    const morningInput = document.getElementById(`morningInput_${deptId}`);
+    const eveningInput = document.getElementById(`eveningInput_${deptId}`);
+
+    const morning_avg = morningInput ? parseFloat(morningInput.value) : undefined;
+    const evening_avg = eveningInput ? parseFloat(eveningInput.value) : undefined;
+
+    const token = localStorage.getItem('adminToken');
+    fetch(`${API_BASE}/api/departments/${deptId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ morning_avg, evening_avg })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            fetchDepartments();
+        } else {
+            alert(data.message || 'خطأ أثناء التحديث');
+        }
+    })
+    .catch(err => console.error('Error saving grade:', err));
+}
+
+// Filter Quick Depts Search
+function filterQuickDepts() {
+    const query = document.getElementById('quickSearchInput').value.toLowerCase().trim();
+    const filtered = allDepartments.filter(d => 
+        d.dept_name_ar.toLowerCase().includes(query) ||
+        d.college_name_ar.toLowerCase().includes(query)
+    );
+    renderQuickDepts(filtered);
+}
+
+// Category Label Mapping
+function getCatLabel(cat) {
+    if (cat === 'medical') return 'الطبية والصحية';
+    if (cat === 'engineering') return 'الهندسة والعلوم';
+    return 'العلوم الإنسانية';
+}
+
+// Add/Edit Department Modal
+function openAddDeptModal() {
+    document.getElementById('deptModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة كلية / قسم جديد';
+    document.getElementById('deptFormId').value = '';
+    document.getElementById('deptForm').reset();
+    document.getElementById('deptModal').style.display = 'flex';
+}
+
+function editDeptModal(deptId) {
+    const dept = allDepartments.find(d => d.id === deptId);
+    if (!dept) return;
+
+    document.getElementById('deptModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل بيانت الكلية / القسم';
+    document.getElementById('deptFormId').value = dept.id;
+    document.getElementById('deptFormCollegeAr').value = dept.college_name_ar;
+    document.getElementById('deptFormCollegeEn').value = dept.college_name_en || '';
+    document.getElementById('deptFormNameAr').value = dept.dept_name_ar;
+    document.getElementById('deptFormNameEn').value = dept.dept_name_en || '';
+    document.getElementById('deptFormCategory').value = dept.category;
+    document.getElementById('deptFormTuition').value = dept.tuition_fee;
+    document.getElementById('deptFormMorningAvg').value = dept.morning_avg;
+    document.getElementById('deptFormEveningAvg').value = dept.evening_avg;
+    document.getElementById('deptFormIcon').value = dept.icon_class || 'fa-graduation-cap';
+    document.getElementById('deptFormImage').value = dept.image_url || 'assets/images/hero.webp';
+    document.getElementById('deptFormDescAr').value = dept.description_ar || '';
+
+    document.getElementById('deptModal').style.display = 'flex';
+}
+
+function closeDeptModal() {
+    document.getElementById('deptModal').style.display = 'none';
+}
+
+function saveDepartment(event) {
+    event.preventDefault();
+    const id = document.getElementById('deptFormId').value;
+    const isEdit = !!id;
+
+    const payload = {
+        college_name_ar: document.getElementById('deptFormCollegeAr').value,
+        college_name_en: document.getElementById('deptFormCollegeEn').value,
+        dept_name_ar: document.getElementById('deptFormNameAr').value,
+        dept_name_en: document.getElementById('deptFormNameEn').value,
+        category: document.getElementById('deptFormCategory').value,
+        tuition_fee: parseInt(document.getElementById('deptFormTuition').value),
+        morning_avg: parseFloat(document.getElementById('deptFormMorningAvg').value),
+        evening_avg: parseFloat(document.getElementById('deptFormEveningAvg').value),
+        icon_class: document.getElementById('deptFormIcon').value,
+        image_url: document.getElementById('deptFormImage').value,
+        description_ar: document.getElementById('deptFormDescAr').value
+    };
+
+    const token = localStorage.getItem('adminToken');
+    const url = isEdit ? `${API_BASE}/api/departments/${id}` : `${API_BASE}/api/departments`;
+    const method = isEdit ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            closeDeptModal();
+            fetchDepartments();
+            fetchStats();
+            alert(data.message || 'تم حفظ البيانات بنجاح');
+        } else {
+            alert(data.message || 'حدث خطأ أثناء التحديث');
+        }
+    })
+    .catch(err => alert('خطأ بالاتصال بالسيرفر'));
+}
+
+function deleteDept(deptId, deptName) {
+    if (!confirm(`هل أنت تأكد من رغبتك في حذف (${deptName}) نهائياً من النظام؟`)) {
+        return;
+    }
+
+    const token = localStorage.getItem('adminToken');
+    fetch(`${API_BASE}/api/departments/${deptId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            fetchDepartments();
+            fetchStats();
+            alert('تم حذف القسم بنجاح');
+        } else {
+            alert(data.message || 'خطأ أثناء الحذف');
+        }
+    })
+    .catch(err => console.error('Error deleting dept:', err));
+}
+
+// --------------------------------------------------
+// STUDENTS MANAGEMENT
+// --------------------------------------------------
+
+function fetchStudents(status = 'all') {
+    const token = localStorage.getItem('adminToken');
+    const search = document.getElementById('studentSearchInput') ? document.getElementById('studentSearchInput').value : '';
+
+    let url = `${API_BASE}/api/registrations?status=${status}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            allStudents = data.data;
+            renderStudentsTable(allStudents);
+        }
+    })
+    .catch(err => console.error('Error fetching students:', err));
+}
+
+function renderStudentsTable(students) {
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 25px;">لا توجد استمارات مطابقة للبحث أو التصفية</td></tr>';
+        return;
+    }
+
+    students.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td><strong>${s.student_name}</strong><br><small style="color: var(--text-muted);">${s.email}</small></td>
+            <td><a href="https://wa.me/${s.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--secondary-color); font-weight: 700;">${s.phone} <i class="fab fa-whatsapp"></i></a></td>
+            <td>${s.city}</td>
+            <td>${s.study_branch}</td>
+            <td><strong style="color: var(--accent-color); font-size: 1rem;">${s.high_school_avg}%</strong></td>
+            <td>${s.dept_name}</td>
+            <td>${s.study_type}</td>
+            <td>${getStatusBadge(s.status)}</td>
+            <td>${new Date(s.created_at).toLocaleDateString('ar-IQ')}</td>
+            <td>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-outline" style="padding: 4px 8px; color: #2ecc71; border-color: rgba(46,204,113,0.4);" onclick="changeStudentStatus(${s.id}, 'accepted')" title="قبول"><i class="fas fa-check"></i></button>
+                    <button class="btn btn-outline" style="padding: 4px 8px; color: #e74c3c; border-color: rgba(231,76,60,0.4);" onclick="changeStudentStatus(${s.id}, 'rejected')" title="رفض"><i class="fas fa-times"></i></button>
+                    <button class="btn btn-outline" style="padding: 4px 8px; color: #f1c40f; border-color: rgba(241,196,15,0.4);" onclick="changeStudentStatus(${s.id}, 'pending')" title="معلق"><i class="fas fa-clock"></i></button>
+                    <button class="btn btn-outline" style="padding: 4px 8px;" onclick="deleteStudent(${s.id})" title="حذف"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function getStatusBadge(status) {
+    if (status === 'accepted') return '<span class="status-pill accepted"><i class="fas fa-check-circle"></i> مقبول</span>';
+    if (status === 'rejected') return '<span class="status-pill rejected"><i class="fas fa-times-circle"></i> مرفوض</span>';
+    return '<span class="status-pill pending"><i class="fas fa-clock"></i> قيد الانتظار</span>';
+}
+
+function changeStudentStatus(id, newStatus) {
+    const token = localStorage.getItem('adminToken');
+    fetch(`${API_BASE}/api/registrations/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            fetchStudents('all');
+            fetchStats();
+        } else {
+            alert(data.message || 'خطأ في تحديث الحالة');
+        }
+    })
+    .catch(err => console.error('Error changing student status:', err));
+}
+
+function deleteStudent(id) {
+    if (!confirm('هل أنت متاكد من حذف استمارة الطالب؟')) return;
+
+    const token = localStorage.getItem('adminToken');
+    fetch(`${API_BASE}/api/registrations/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            fetchStudents('all');
+            fetchStats();
+        } else {
+            alert(data.message || 'خطأ أثناء الحذف');
+        }
+    })
+    .catch(err => console.error('Error deleting student:', err));
+}
+
+function filterStudents(status, btn) {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    fetchStudents(status);
+}
+
+function searchStudents() {
+    fetchStudents('all');
+}
+
+// Switch Tabs
+function switchTab(tabName, el) {
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+
+    const titles = {
+        'overview': 'نظرة عامة والمعدلات الحالية',
+        'departments': 'إدارة الكليات والأقسام والمعدلات والأقساط',
+        'students': 'استمارات الطلاب المسجلين وطلبات القبول'
+    };
+
+    if (tabName === 'overview') {
+        document.getElementById('tabOverview').style.display = 'block';
+    } else if (tabName === 'departments') {
+        document.getElementById('tabDepartments').style.display = 'block';
+    } else if (tabName === 'students') {
+        document.getElementById('tabStudents').style.display = 'block';
+    }
+
+    document.getElementById('pageTitle').textContent = titles[tabName] || 'لوحة التحكم';
+}
+
+</script>
 </body>
 </html>
