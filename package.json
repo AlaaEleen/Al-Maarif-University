@@ -4,11 +4,10 @@
   "description": "Al-Maarif University Portal & Admin Dashboard with SQLite Database",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "npm rebuild better-sqlite3"
+    "start": "node server.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "20.x"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
