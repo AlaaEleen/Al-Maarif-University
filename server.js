@@ -3,7 +3,15 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const fs = require('fs');
 const db = require('./database');
+
+// Optional Fallback Modules (for cloud deployments missing subdirectories)
+let bundle = null;
+try { bundle = require('./bundle_assets'); } catch (e) {}
+
+let embeddedAssets = null;
+try { embeddedAssets = require('./embedded_assets'); } catch (e) {}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +21,68 @@ const JWT_SECRET = 'almaarif_secret_jwt_key_2026';
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ------------------------------------------------------------------
+// ASSET FALLBACK ROUTES (Ensures CSS, JS & Images always work on Render)
+// ------------------------------------------------------------------
+
+// CSS Fallbacks
+app.get('/css/:file', (req, res, next) => {
+  const filePath = path.join(__dirname, 'css', req.params.file);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  if (bundle) {
+    if (req.params.file === 'style.css' && bundle.styleCss) {
+      res.setHeader('Content-Type', 'text/css');
+      return res.send(bundle.styleCss);
+    }
+    if (req.params.file === 'admin.css' && bundle.adminCss) {
+      res.setHeader('Content-Type', 'text/css');
+      return res.send(bundle.adminCss);
+    }
+  }
+  next();
+});
+
+// JS Fallbacks
+app.get('/js/:file', (req, res, next) => {
+  const filePath = path.join(__dirname, 'js', req.params.file);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  if (bundle) {
+    if (req.params.file === 'main.js' && bundle.mainJs) {
+      res.setHeader('Content-Type', 'application/javascript');
+      return res.send(bundle.mainJs);
+    }
+    if (req.params.file === 'lang.js' && bundle.langJs) {
+      res.setHeader('Content-Type', 'application/javascript');
+      return res.send(bundle.langJs);
+    }
+    if (req.params.file === 'admin.js' && bundle.adminJs) {
+      res.setHeader('Content-Type', 'application/javascript');
+      return res.send(bundle.adminJs);
+    }
+  }
+  next();
+});
+
+// Image Fallbacks (Redirects to high-res CDN if local file is missing)
+app.get(['/assets/images/:file', '/assets/:file'], (req, res, next) => {
+  const filename = req.params.file;
+  const filePath = path.join(__dirname, 'assets', 'images', filename);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  if (embeddedAssets && embeddedAssets.CDN_IMAGES) {
+    const cdnUrl = embeddedAssets.CDN_IMAGES[filename] || embeddedAssets.DEFAULT_IMAGE;
+    return res.redirect(302, cdnUrl);
+  }
+  next();
+});
+
+// Serve physical static files
 app.use(express.static(path.join(__dirname)));
 
 // Auth Middleware for Admin routes
@@ -231,9 +301,9 @@ app.delete('/api/departments/:id', authAdmin, (req, res) => {
   }
 });
 
-// ------------------------------------------------------------------
+// --------------------------------------------------
 // STUDENT REGISTRATION ROUTES
-// ------------------------------------------------------------------
+// --------------------------------------------------
 
 // Submit Student Application (Public)
 app.post('/api/registrations', (req, res) => {
@@ -351,9 +421,9 @@ app.delete('/api/registrations/:id', authAdmin, (req, res) => {
   }
 });
 
-// ------------------------------------------------------------------
+// --------------------------------------------------
 // DASHBOARD STATS ROUTE
-// ------------------------------------------------------------------
+// --------------------------------------------------
 
 // Summary Counts (Admin Only)
 app.get('/api/stats', authAdmin, (req, res) => {
